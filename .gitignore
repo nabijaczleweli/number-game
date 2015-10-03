@@ -1,28 +1,14 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+*
+!src
+!src/*
+!.clang-format
+!.dropbox_uploader.enc
+!.gitignore
+!.travis.yml
+!deploy.sh
+!report.sh
+!changelog.sh
+!wscript
+!LICENSE
+!README.md
+!number-game.sublime-project
