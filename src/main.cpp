@@ -61,16 +61,14 @@ void play_game(db_t & db) {
 	while(guessed != desired) {
 		++tries;
 
-		string guesseds;
-		while(guesseds.empty()) {
+		bool valid = false;
+		while(!valid) {
 			cout << "Enter the number: ";
-			cin >> guesseds;
-			if(guesseds.find_first_not_of("0123456789") == string::npos)
-				guessed = atoi(guesseds.c_str());
-			else {
+			valid = static_cast<bool>(cin >> guessed);
+			cin.clear();
+			cin.ignore();
+			if(!valid)
 				cout << "That ain't no number!\n";
-				guesseds.clear();
-			}
 		}
 		if(guessed != desired) {
 			cout << "Incorrect! Your number is too ";
@@ -85,7 +83,6 @@ void play_game(db_t & db) {
 	cout << "Congratulations! You guessed the number in " << tries << " tr" << ((tries > 1) ? "ies" : +"y") << "!\n"
 	     << "Enter your name: ";
 	string name;
-	cin.ignore();  // Necessary, because reasons
 	getline(cin, name);
 
 	auto statement = sqlite3_mprintf("INSERT INTO scores VALUES(%Q, %u);", name.c_str(), tries);
@@ -112,18 +109,19 @@ int main() {
 	static const vector<pair<function<void(db_t &)>, string>> menu({{play_game, "Play game"}, {display_highscores, "Show highscores"}, {[](auto &) {}, "Quit"}});
 
 
-	string idxs;
-	while(idxs.empty()) {
+	bool valid = false;
+	while(!valid) {
 		cout << "What do you want to do?\n";
 		size_t idx{};
 		for(const auto & item : menu)
 			cout << "\t" << idx++ << ". " << item.second << '\n';
 		cout << "Enter one of the above numbers: ";
 
-		cin >> idxs;
-		if((idxs.find_first_not_of("0123456789") != string::npos) || ((idx = strtoul(idxs.c_str(), nullptr, 10)) >= menu.size())) {
+		valid = static_cast<bool>(cin >> idx);
+		cin.clear();
+		cin.ignore();
+		if(!valid || idx >= menu.size()) {
 			cout << '\n';
-			idxs.clear();
 			continue;
 		}
 
