@@ -28,10 +28,7 @@
 #include <random>
 #include <string>
 #include <vector>
-
-
-#define SYMBOL_STRING(sym) \
-	{ sym, #sym }
+#include <mutex>
 
 
 using namespace std;
@@ -96,11 +93,23 @@ void play_game(db_t & db) {
 	sqlite3_free(statement);
 }
 
-void display_highscores(db_t &) {}
+void display_highscores(db_t & db) {
+	static const auto outputscore = [](char ** values) { cout << values[1] << ":\t" << values[0] << '\n'; };
+
+	once_flag header_printed;
+	sqlite3_exec(db, "SELECT * FROM scores ORDER BY score;", [](void * data, int, char ** values, char ** names) {
+		call_once(*static_cast<once_flag *>(data), [&]() {
+			cout << "Entries have the format:\n";
+			outputscore(names);
+		});
+		outputscore(values);
+		return 0;
+	}, &header_printed, nullptr);
+}
 
 
 int main() {
-	static const vector<pair<function<void(db_t &)>, string>> menu({SYMBOL_STRING(play_game), SYMBOL_STRING(display_highscores), SYMBOL_STRING([](auto &) {})});
+	static const vector<pair<function<void(db_t &)>, string>> menu({{play_game, "Play game"}, {display_highscores, "Show highscores"}, {[](auto &) {}, "Quit"}});
 
 
 	string idxs;
@@ -118,6 +127,7 @@ int main() {
 			continue;
 		}
 
+		cout << '\n';
 		db_t db;
 		menu[idx].first(db);
 	}
