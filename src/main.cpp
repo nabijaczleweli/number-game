@@ -22,17 +22,103 @@
 
 
 #include <sqlite3.h>
+#include <functional>
 #include <iostream>
+#include <cstdlib>
+#include <random>
 #include <string>
+#include <vector>
+
+
+#define SYMBOL_STRING(sym) \
+	{ sym, #sym }
 
 
 using namespace std;
 
 
+struct db_t {
+	sqlite3 * db;
+
+	db_t() : db(nullptr) {
+		sqlite3_open("number-game.db", &db);
+		sqlite3_exec(db, "CREATE TABLE scores(name string, score int);", nullptr, nullptr, nullptr);
+	}
+
+	~db_t() {
+		sqlite3_close(db);
+	}
+
+	operator sqlite3 *() {
+		return db;
+	}
+};
+
+
+void play_game(db_t & db) {
+	int desired        = 420;
+	int guessed        = desired - 1;
+	unsigned int tries = 0;
+	cout << desired << '\n';
+
+	while(guessed != desired) {
+		++tries;
+
+		string guesseds;
+		while(guesseds.empty()) {
+			cout << "Enter the number: ";
+			cin >> guesseds;
+			if(guesseds.find_first_not_of("0123456789") == string::npos)
+				guessed = atoi(guesseds.c_str());
+			else {
+				cout << "That ain't no number!\n";
+				guesseds.clear();
+			}
+		}
+		if(guessed != desired) {
+			cout << "Incorrect! Your number is too ";
+			if(guessed < desired)
+				cout << "small";
+			else if(guessed > desired)
+				cout << "big";
+			cout << '\n';
+		}
+	}
+
+	cout << "Congratulations! You guessed the number in " << tries << " tr" << ((tries > 1) ? "ies" : +"y") << "!\n"
+	     << "Enter your name: ";
+	string name;
+	cin.ignore();  // Necessary, because reasons
+	getline(cin, name);
+
+	auto statement = sqlite3_mprintf("INSERT INTO scores VALUES(%Q, %u);", name.c_str(), tries);
+	sqlite3_exec(db, statement, nullptr, nullptr, nullptr);
+	sqlite3_free(statement);
+}
+
+void display_highscores(db_t &) {}
+
+
 int main() {
-	sqlite3 * db{};
-	sqlite3_open("number-game.db", &db);
-	sqlite3_exec(db, "CREATE TABLE scores(name string, score int)", nullptr, nullptr, nullptr);
-	sqlite3_exec(db, "INSERT INTO scores VALUES('hooman', 42)", nullptr, nullptr, nullptr);
-	sqlite3_close(db);
+	static const vector<pair<function<void(db_t &)>, string>> menu({SYMBOL_STRING(play_game), SYMBOL_STRING(display_highscores), SYMBOL_STRING([](auto &) {})});
+
+
+	string idxs;
+	while(idxs.empty()) {
+		cout << "What do you want to do?\n";
+		size_t idx{};
+		for(const auto & item : menu)
+			cout << "\t" << idx++ << ". " << item.second << '\n';
+		cout << "Enter one of the above numbers: ";
+
+		cin >> idxs;
+		if((idxs.find_first_not_of("0123456789") != string::npos) || ((idx = strtoul(idxs.c_str(), nullptr, 10)) >= menu.size())) {
+			cout << '\n';
+			idxs.clear();
+			continue;
+		}
+
+		db_t db;
+		menu[idx].first(db);
+	}
 }
