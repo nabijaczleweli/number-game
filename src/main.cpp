@@ -115,13 +115,13 @@ int main() {
 	string idxs;
 	while(idxs.empty()) {
 		cout << "What do you want to do?\n";
-		size_t idx{};
+		size_t idx = 1;
 		for(const auto & item : menu)
 			cout << "\t" << idx++ << ". " << item.second << '\n';
 		cout << "Enter one of the above numbers: ";
 
 		cin >> idxs;
-		if((idxs.find_first_not_of("0123456789") != string::npos) || ((idx = strtoul(idxs.c_str(), nullptr, 10)) >= menu.size())) {
+		if((idxs.find_first_not_of("0123456789") != string::npos) || ((idx = strtoul(idxs.c_str(), nullptr, 10)) > menu.size())) {
 			cout << '\n';
 			idxs.clear();
 			continue;
@@ -129,6 +129,6 @@ int main() {
 
 		cout << '\n';
 		db_t db;
-		menu[idx].first(db);
+		menu[idx - 1].first(db);
 	}
 }
