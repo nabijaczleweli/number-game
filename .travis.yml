@@ -1,0 +1,33 @@
+sudo: false
+language: cpp
+
+compiler:
+  - gcc
+  - clang
+
+install:
+  - export PATH="$HOME/bin:$PATH"
+  - if [ "$CXX" = "g++" ]; then export CXX=g++-5 CC=gcc-5; fi
+  - if [ "$CXX" = "clang++" ]; then export CXX=clang++-3.7 CC=clang-3.7; fi
+  -
+  - mkdir ~/bin
+  - wget --no-check-certificate --no-clobber -O /tmp/tools/waf https://waf.io/waf-1.8.14 || true
+  - install -t ~/bin /tmp/tools/waf
+
+script:
+  - waf configure
+  - waf
+
+cache:
+  apt: true
+  directories:
+    - /tmp/tools
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.7
+    packages:
+      - g++-5
+      - clang-3.7
