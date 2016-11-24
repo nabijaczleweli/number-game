@@ -1,2 +1,2 @@
 # number-game
-A trivial number guessing game in C++, because I want to sqlite
+A trivial number guessing game in C++ to experiment with sqlite
